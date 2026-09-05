@@ -3,17 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>面孔联盟：3D肉鸽 (Face League: Micro-Rogue)</title>
+<title>面孔战术：终极肉鸽 (Face Tactical: Ultimate Rogue)</title>
 <style>
   :root {
     --face-img: url('IMG_7514.jpeg');
-    --bg: #10121a;
-    --card: #1a1d29;
+    --bg: #090b10;
+    --card: #131722;
     --accent: #3b82f6;
     --accent-gold: #f59e0b;
     --danger: #ef4444;
     --hp: #10b981;
-    --border: #2d3348;
+    --shield: #60a5fa;
+    --border: #232a3d;
     --text: #f3f4f6;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -25,7 +26,7 @@
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    padding: 10px;
+    padding: 6px;
   }
   #app {
     background: var(--card);
@@ -33,111 +34,124 @@
     max-width: 440px;
     border-radius: 16px;
     border: 1px solid var(--border);
-    padding: 14px;
+    padding: 10px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     position: relative;
-    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+    transition: transform 0.05s ease;
+  }
+  #app.shake { animation: shake 0.25s cubic-bezier(.36,.07,.19,.97) both; }
+  @keyframes shake {
+    10%, 90% { transform: translate3d(-2px, 0, 0); }
+    20%, 80% { transform: translate3d(3px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
+    40%, 60% { transform: translate3d(3px, 0, 0); }
   }
 
-  /* 核心：把大图切成头像的基础样式 (11列 x 7行) */
+  /* 核心精灵图切片 (11列 x 7行) */
   .face-sprite {
     background-image: var(--face-img);
     background-repeat: no-repeat;
     background-size: 1100% 700%;
     background-color: #ffffff;
     border-radius: 50%;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
   }
 
-  /* 顶部加载图片提示栏（未找到图片时手机可一键相册载入） */
-  #img-bar {
-    background: #252b3d;
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 0.75rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border: 1px dashed var(--accent-gold);
-  }
-  #img-bar input { display: none; }
-  .upload-btn {
-    background: var(--accent-gold);
-    color: #000;
-    font-weight: bold;
-    padding: 4px 8px;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-
-  /* 顶栏状态 */
+  /* 状态信息栏 */
   header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--border);
-    padding-bottom: 8px;
+    padding-bottom: 6px;
   }
-  .title { font-weight: 800; font-size: 1rem; }
-  .stats { font-size: 0.8rem; display: flex; gap: 10px; }
+  .title { font-weight: 800; font-size: 0.95rem; color: #fff; display: flex; align-items: center; gap: 6px; }
+  .stats { font-size: 0.72rem; display: flex; gap: 8px; }
   .stats b { color: var(--accent-gold); }
 
-  /* 3人英雄出战栏 */
+  /* 羁绊栏 & 资源栏 */
+  .sub-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+  }
+  #synergy-bar { display: flex; gap: 4px; flex-wrap: wrap; }
+  .synergy-tag {
+    font-size: 0.6rem;
+    padding: 2px 5px;
+    border-radius: 4px;
+    background: #1e2638;
+    border: 1px solid var(--accent);
+    color: #93c5fd;
+    font-weight: 600;
+  }
+  .wallet { font-size: 0.75rem; font-weight: 800; color: var(--accent-gold); }
+
+  /* 英雄出战栏 */
   .squad-bar {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    gap: 6px;
   }
   .hero-slot {
-    background: #141622;
+    background: #0d1017;
     border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 6px;
+    padding: 4px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
   }
-  .hero-slot .face-sprite { width: 42px; height: 42px; }
-  .hero-slot .name { font-size: 0.7rem; font-weight: 700; }
+  .hero-slot .face-sprite { width: 38px; height: 38px; }
+  .hero-slot .name { font-size: 0.68rem; font-weight: 700; }
   .skill-btn {
     width: 100%;
-    padding: 4px 0;
-    font-size: 0.65rem;
+    padding: 3px 0;
+    font-size: 0.62rem;
     background: var(--accent);
     color: #fff;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    font-weight: 600;
   }
-  .skill-btn:disabled { background: #2f354a; color: #6b7280; }
+  .skill-btn:disabled { background: #1c2233; color: #525c76; }
 
-  /* 地牢棋盘 (6x6) */
+  /* 6x6 战术棋盘 */
   #board {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     grid-template-rows: repeat(6, 1fr);
     gap: 4px;
-    background: #12141c;
+    background: #0a0c12;
     border-radius: 12px;
     padding: 6px;
     aspect-ratio: 1 / 1;
     border: 1px solid var(--border);
+    position: relative;
   }
   .tile {
-    background: #1c202e;
-    border-radius: 8px;
+    background: #151926;
+    border-radius: 6px;
     display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
+    cursor: pointer;
+    font-size: 1.3rem;
   }
-  .tile.wall { background: #0f1017; }
-  .tile.exit { background: #2a2210; box-shadow: inset 0 0 0 2px var(--accent-gold); }
-  .tile.player-box { background: #1c2847; box-shadow: inset 0 0 0 2px var(--accent); }
+  .tile.wall { background: #0c0e14; border: 1px solid #1a202c; }
+  .tile.exit { background: #262010; box-shadow: inset 0 0 0 2px var(--accent-gold); }
+  .tile.player-box { background: #17243e; box-shadow: inset 0 0 0 2px var(--accent); }
+  .tile.boss-box { background: #3b1418; box-shadow: inset 0 0 0 2px var(--danger); }
+  .tile.target-hint { box-shadow: inset 0 0 0 2px #ef444466; }
   .tile .face-sprite { width: 85%; height: 85%; }
+  
   .tile-badge {
     position: absolute;
     bottom: 2px;
@@ -148,80 +162,115 @@
     padding: 0 4px;
     border-radius: 4px;
   }
+  .intent-icon {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 0.65rem;
+  }
+  .stun-icon {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    font-size: 0.7rem;
+    animation: spin 2s infinite linear;
+  }
+  @keyframes spin { 100% { transform: rotate(360deg); } }
 
-  /* 状态信息条 */
+  /* 浮动伤害文本容器 */
+  .float-text {
+    position: absolute;
+    font-size: 0.8rem;
+    font-weight: 900;
+    pointer-events: none;
+    animation: floatUp 0.6s ease-out forwards;
+    z-index: 50;
+  }
+  @keyframes floatUp {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-24px); opacity: 0; }
+  }
+
+  /* 战斗日志与遗物栏 */
   #log {
     height: 38px;
-    background: #13151f;
+    background: #0d1017;
     border-radius: 6px;
     padding: 4px 8px;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     color: #9ca3af;
     overflow-y: auto;
     display: flex;
     flex-direction: column-reverse;
   }
+  #relic-bar {
+    font-size: 0.65rem;
+    color: var(--accent-gold);
+    min-height: 16px;
+    white-space: nowrap;
+    overflow-x: auto;
+  }
 
-  /* 触控轮盘 */
+  /* 虚拟轮盘 */
   .ctrl-pad {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 6px;
-    max-width: 190px;
+    max-width: 180px;
     margin: 0 auto;
   }
   .ctrl-btn {
-    background: #24293c;
+    background: #1d2436;
     color: #fff;
     border: none;
     border-radius: 8px;
-    padding: 10px;
+    padding: 9px;
     font-size: 1.1rem;
     cursor: pointer;
   }
   .ctrl-btn:active { background: var(--accent); }
 
-  /* 选人与结算全屏遮罩 */
+  /* 模态弹窗 */
   #overlay {
     position: absolute;
     inset: 0;
-    background: rgba(12, 14, 21, 0.96);
+    background: rgba(10, 12, 18, 0.96);
     border-radius: 16px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 16px;
-    gap: 12px;
+    gap: 10px;
     z-index: 99;
   }
   #overlay.hidden { display: none; }
-  .roster-grid {
+  .modal-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
     width: 100%;
-    max-height: 280px;
+    max-height: 290px;
     overflow-y: auto;
   }
-  .roster-item {
-    background: #191c28;
+  .modal-card {
+    background: #151926;
     border: 2px solid var(--border);
     border-radius: 8px;
     padding: 6px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     cursor: pointer;
   }
-  .roster-item.active { border-color: var(--accent-gold); background: #24283b; }
-  .roster-item .face-sprite { width: 46px; height: 46px; }
-  .start-btn {
+  .modal-card.active { border-color: var(--accent-gold); background: #22293d; }
+  .modal-card .face-sprite { width: 44px; height: 44px; }
+  .modal-btn {
     background: var(--accent);
     color: #fff;
     border: none;
-    padding: 10px 24px;
+    padding: 9px 24px;
     font-weight: 700;
     border-radius: 8px;
     cursor: pointer;
@@ -232,31 +281,32 @@
 <body>
 
 <div id="app">
-  <!-- 手机选图辅助条 -->
-  <div id="img-bar">
-    <span>原图未显示？点此加载本地截图：</span>
-    <label class="upload-btn" for="local-file">选图</label>
-    <input type="file" id="local-file" accept="image/*">
-  </div>
-
   <header>
-    <div class="title">面孔联盟 (Face League)</div>
+    <div class="title">🎭 面孔战术：深渊领主</div>
     <div class="stats">
-      <span>第 <b id="ui-floor">1</b> 层</span>
-      <span>生命: <b id="ui-hp" style="color:var(--hp)">20/20</b></span>
+      <span>层数: <b id="ui-floor">1/6</b></span>
+      <span>护甲: <b id="ui-shield" style="color:var(--shield)">0</b></span>
+      <span>生命: <b id="ui-hp" style="color:var(--hp)">24/24</b></span>
     </div>
   </header>
 
-  <!-- 3名角色状态栏 -->
+  <div class="sub-header">
+    <div id="synergy-bar"></div>
+    <div class="wallet">🪙 <span id="ui-gold">0</span></div>
+  </div>
+
+  <div id="relic-bar">遗物: 暂无</div>
+
+  <!-- 英雄技能栏 -->
   <div class="squad-bar" id="squad-bar"></div>
 
-  <!-- 6x6 地下城 -->
+  <!-- 6x6 棋盘 -->
   <div id="board"></div>
 
-  <!-- 战况播报 -->
+  <!-- 播报条 -->
   <div id="log"></div>
 
-  <!-- 手机虚拟摇杆 -->
+  <!-- 轮盘 -->
   <div class="ctrl-pad">
     <div></div>
     <button class="ctrl-btn" onclick="game.move(0, -1)">▲</button>
@@ -266,94 +316,141 @@
     <button class="ctrl-btn" onclick="game.move(1, 0)">▶</button>
   </div>
 
-  <!-- 选角与复活弹窗 -->
+  <!-- 全能模态窗口 -->
   <div id="overlay">
-    <h3 id="modal-title">集结 3 位面孔英雄</h3>
-    <div style="font-size:0.75rem; color:#9ca3af; text-align:center;">
-      从图中特征人物中任选 3 名开启地牢探险：
-    </div>
-    <div class="roster-grid" id="roster"></div>
-    <button class="start-btn" id="modal-btn" onclick="game.confirmSquad()">出征 (0/3)</button>
+    <h3 id="modal-title">出征选拔</h3>
+    <div id="modal-desc" style="font-size:0.75rem; color:#9ca3af; text-align:center;"></div>
+    <div class="modal-grid" id="modal-grid"></div>
+    <button class="modal-btn" id="modal-act" onclick="game.handleModalAction()">确认</button>
   </div>
 </div>
 
 <script>
-// 精准映射原图坐标 (11 列 x 7 行, col: 0~10, row: 0~6)
+// Web Audio API 极简纯代码合成音效器（移动端免加载音频资产）
+const Sound = {
+  ctx: null,
+  init() {
+    if (!this.ctx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) this.ctx = new AudioContext();
+    }
+    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+  },
+  playTone(freq, type, dur, slide = 0) {
+    if (!this.ctx) return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+      if (slide) osc.frequency.linearRampToValueAtTime(slide, this.ctx.currentTime + dur);
+      gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + dur);
+    } catch(e) {}
+  },
+  hit() { this.playTone(180, 'square', 0.1, 60); },
+  crit() { this.playTone(480, 'sawtooth', 0.22, 90); },
+  coin() { this.playTone(880, 'sine', 0.12, 1320); },
+  boom() { this.playTone(90, 'triangle', 0.35, 30); },
+  heal() { this.playTone(330, 'sine', 0.2, 660); },
+  skill() { this.playTone(520, 'sine', 0.18, 780); }
+};
+
+// 角色数据库 (11列 x 7行精确映射)
 const HEROES_META = [
-  { id: 'chef', name: '主厨', col: 6, row: 0, skill: '盛宴回复', cd: 4, desc: '全队回复 6 点生命' },
-  { id: 'cowboy', name: '西部牛仔', col: 1, row: 3, skill: '套索爆头', cd: 3, desc: '狙击距离最近敌人造成 4 伤' },
-  { id: 'helmet', name: '橄榄球手', col: 5, row: 3, skill: '重装冲撞', cd: 4, desc: '震荡周围所有敌人造成 2 伤' },
-  { id: 'agent', name: '墨镜特工', col: 2, row: 1, skill: '弱点洞察', cd: 4, desc: '下一次平砍产生 3 倍暴击' },
-  { id: 'headphone', name: '电竞选手', col: 7, row: 3, skill: '超频律动', cd: 5, desc: '刷新其余所有队友技能冷却' },
-  { id: 'beanie', name: '极地帽客', col: 9, row: 0, skill: '绝对零度', cd: 5, desc: '冰冻全场怪物 2 个回合' }
+  { id: 'chef', name: '主厨', col: 6, row: 0, tags: ['制服'], skill: '盛宴回复', cd: 4, desc: '回复 6 点生命并清空流血' },
+  { id: 'cowboy', name: '牛仔', col: 1, row: 3, tags: ['帽子', '胡须'], skill: '狙击套索', cd: 3, desc: '对距离最近敌人造成 5 点直接穿透伤害' },
+  { id: 'agent', name: '墨镜特工', col: 2, row: 1, tags: ['眼镜'], skill: '弱点洞悉', cd: 4, desc: '下次攻击造成 300% 暴击并击飞' },
+  { id: 'helmet', name: '橄榄球手', col: 5, row: 3, tags: ['帽子', '制服'], skill: '蛮力冲撞', cd: 4, desc: '击退周围所有敌人并赋予自身 4 点护甲' },
+  { id: 'geek', name: '极客', col: 7, row: 2, tags: ['眼镜'], skill: '战术超频', cd: 5, desc: '刷新所有队友技能，金币+3' },
+  { id: 'beanie', name: '雪帽客', col: 9, row: 0, tags: ['帽子', '胡须'], skill: '极寒暴风', cd: 5, desc: '冰冻全场地牢敌人 2 回合' },
+  { id: 'pilot', name: '护目飞行员', col: 8, row: 6, tags: ['帽子', '眼镜'], skill: '空投补给', cd: 4, desc: '随机空降 1 个急救包与 1 个炸药桶' },
+  { id: 'clown', name: '胡子绅士', col: 10, row: 1, tags: ['胡须'], skill: '台球连击', cd: 3, desc: '下一次撞击连锁伤害提升 300%' }
 ];
 
-// 怪物同样取自大图中的其他面孔
+// 怪物库 (含第 6 层 Boss)
 const MONSTERS_META = [
-  { name: '黄帽怪人', col: 10, row: 0, hp: 3, atk: 2 },
-  { name: '红连帽极客', col: 5, row: 2, hp: 4, atk: 3 },
-  { name: '黑超暴徒', col: 8, row: 1, hp: 5, atk: 4 }
+  { type: 'melee', name: '红帽刺客', col: 5, row: 2, hp: 4, atk: 3, intent: '🗡️' },
+  { type: 'ranged', name: '墨镜神射', col: 8, row: 1, hp: 3, atk: 2, intent: '🏹' },
+  { type: 'bomber', name: '狂热自爆', col: 10, row: 0, hp: 3, atk: 6, intent: '💣' },
+  { type: 'shield', name: '铁盔近卫', col: 4, row: 6, hp: 7, atk: 2, intent: '🛡️' },
+  { type: 'boss', name: '千面魔尊', col: 0, row: 4, hp: 30, atk: 4, intent: '👑' }
+];
+
+// 遗物库
+const RELIC_POOL = [
+  { id: 'vampire', name: '吸血符咒', desc: '击杀敌人时，回复全队 2 点生命' },
+  { id: 'thorns', name: '荆棘护甲', desc: '受击时反弹 2 点真实伤害给攻击者' },
+  { id: 'heavy', name: '动能增压', desc: '撞墙或连锁撞击伤害由 2 点提升至 5 点' },
+  { id: 'greed', name: '点金之触', desc: '击破木箱与敌人时获得双倍金币' },
+  { id: 'boots', name: '疾行战靴', desc: '每进入新一层，全员技能冷却直接减半' },
+  { id: 'shield_up', name: '充能矩阵', desc: '击杀敌人时，获得 2 点临时护甲' }
 ];
 
 function applySprite(el, col, row) {
-  const x = (col / 10) * 100;
-  const y = (row / 6) * 100;
-  el.style.backgroundPosition = `${x}% ${y}%`;
+  el.style.backgroundPosition = `${(col / 10) * 100}% ${(row / 6) * 100}%`;
 }
 
-class MicroRogue {
+class UltimateRogue {
   constructor() {
     this.size = 6;
     this.floor = 1;
-    this.hp = 20;
-    this.maxHp = 20;
+    this.maxHp = 24;
+    this.hp = 24;
+    this.shield = 0;
+    this.gold = 5;
     this.selected = [];
     this.squad = [];
+    this.relics = [];
+    this.activeSynergies = [];
     this.pos = { x: 0, y: 0 };
     this.exit = { x: 5, y: 5 };
     this.enemies = [];
     this.walls = [];
+    this.props = []; // {x, y, type: 'tnt'|'crate'|'shrine'|'shop'}
     this.food = [];
     this.crit = false;
+    this.chainBoost = false;
     this.freeze = 0;
+    this.bossRef = null;
 
-    this.initFileUploader();
-    this.buildRosterUI();
+    this.showRosterPick();
     window.addEventListener('keydown', (e) => this.handleKey(e));
   }
 
-  initFileUploader() {
-    const input = document.getElementById('local-file');
-    input.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        const url = URL.createObjectURL(file);
-        document.documentElement.style.setProperty('--face-img', `url("${url}")`);
-        document.getElementById('img-bar').style.display = 'none';
-        this.log('已成功绑定本地面孔大图！');
-      }
-    });
-  }
-
-  buildRosterUI() {
-    const roster = document.getElementById('roster');
-    roster.innerHTML = '';
+  showRosterPick() {
+    const grid = document.getElementById('modal-grid');
+    grid.innerHTML = '';
+    document.getElementById('modal-title').innerText = '组建 3 人面孔战队';
+    document.getElementById('modal-desc').innerText = '凑齐相同标签可激活阵营羁绊加成：';
+    
     HEROES_META.forEach(h => {
       const card = document.createElement('div');
-      card.className = 'roster-item';
-      
+      card.className = 'modal-card';
       const icon = document.createElement('div');
       icon.className = 'face-sprite';
       applySprite(icon, h.col, h.row);
-      
       card.appendChild(icon);
       card.innerHTML += `
         <div class="name">${h.name}</div>
-        <div style="font-size:0.6rem; color:#9ca3af; text-align:center;">${h.desc}</div>
+        <div style="font-size:0.6rem; color:#f59e0b;">${h.tags.join('·')}</div>
+        <div style="font-size:0.56rem; color:#9ca3af; text-align:center;">${h.desc}</div>
       `;
-      card.onclick = () => this.toggleHero(h, card);
-      roster.appendChild(card);
+      card.onclick = () => {
+        Sound.init();
+        Sound.coin();
+        this.toggleHero(h, card);
+      };
+      grid.appendChild(card);
     });
+
+    const btn = document.getElementById('modal-act');
+    btn.innerText = `出征 (0/3)`;
+    btn.disabled = true;
   }
 
   toggleHero(h, card) {
@@ -365,28 +462,63 @@ class MicroRogue {
       this.selected.push({ ...h, currentCd: 0 });
       card.classList.add('active');
     }
-    const btn = document.getElementById('modal-btn');
+    const btn = document.getElementById('modal-act');
     btn.innerText = `出征 (${this.selected.length}/3)`;
     btn.disabled = this.selected.length !== 3;
   }
 
-  confirmSquad() {
+  handleModalAction() {
     if (this.selected.length !== 3) return;
     this.squad = JSON.parse(JSON.stringify(this.selected));
+    this.computeSynergies();
     document.getElementById('overlay').classList.add('hidden');
     this.renderSquadBar();
     this.initFloor(1);
   }
 
+  computeSynergies() {
+    this.activeSynergies = [];
+    const counts = {};
+    this.squad.forEach(h => h.tags.forEach(t => counts[t] = (counts[t] || 0) + 1));
+
+    if ((counts['帽子'] || 0) >= 2) this.activeSynergies.push({ name: '帽子同盟', desc: '闪避率+25%' });
+    if ((counts['眼镜'] || 0) >= 2) this.activeSynergies.push({ name: '智识眼镜', desc: '暴击+25%' });
+    if ((counts['胡须'] || 0) >= 2) this.activeSynergies.push({ name: '硬派胡子', desc: '常驻减伤 1' });
+    if ((counts['制服'] || 0) >= 2) this.activeSynergies.push({ name: '先锋制服', desc: '每层护甲+3' });
+
+    const synEl = document.getElementById('synergy-bar');
+    synEl.innerHTML = '';
+    this.activeSynergies.forEach(s => {
+      const tag = document.createElement('div');
+      tag.className = 'synergy-tag';
+      tag.innerText = s.name;
+      synEl.appendChild(tag);
+    });
+  }
+
   initFloor(floorNum) {
     this.floor = floorNum;
-    document.getElementById('ui-floor').innerText = this.floor;
+    document.getElementById('ui-floor').innerText = `${this.floor}/6`;
     this.pos = { x: 0, y: 0 };
     this.exit = { x: this.size - 1, y: this.size - 1 };
     this.walls = [];
+    this.props = [];
     this.food = [];
+    this.enemies = [];
+    this.bossRef = null;
 
-    // 随机生成 4 块障碍墙
+    if (this.hasSynergy('先锋制服')) this.shield += 3;
+    if (this.hasRelic('boots')) {
+      this.squad.forEach(h => h.currentCd = Math.floor(h.currentCd / 2));
+    }
+
+    // 第 6 层：最终 BOSS 战
+    if (this.floor === 6) {
+      this.initBossFloor();
+      return;
+    }
+
+    // 生成墙壁
     while (this.walls.length < 4) {
       let wx = Math.floor(Math.random() * this.size);
       let wy = Math.floor(Math.random() * this.size);
@@ -394,40 +526,77 @@ class MicroRogue {
       if (!this.walls.some(w => w.x === wx && w.y === wy)) this.walls.push({ x: wx, y: wy });
     }
 
-    // 随机 1 个补给便当
-    let fx = Math.floor(Math.random() * this.size);
-    let fy = Math.floor(Math.random() * this.size);
-    if (!this.isBlocked(fx, fy) && (fx !== 0 || fy !== 0)) this.food.push({ x: fx, y: fy });
+    // 生成 TNT 桶与木箱
+    this.spawnProp('tnt', 2);
+    this.spawnProp('crate', 2);
 
-    // 随机生成敌人
-    this.enemies = [];
+    // 随机商店 (⛺) 或神秘祭坛 (⛩️)
+    if (Math.random() > 0.4) {
+      this.spawnProp(Math.random() > 0.5 ? 'shop' : 'shrine', 1);
+    }
+
+    // 生成敌人
     const count = 2 + Math.floor(this.floor * 0.7);
     for (let i = 0; i < count; i++) {
       let ex, ey;
       do {
         ex = Math.floor(Math.random() * this.size);
         ey = Math.floor(Math.random() * this.size);
-      } while (this.isBlocked(ex, ey) || (ex + ey < 2));
+      } while (this.isOccupied(ex, ey) || (ex + ey < 2));
 
-      const meta = MONSTERS_META[i % MONSTERS_META.length];
+      const meta = MONSTERS_META[i % (MONSTERS_META.length - 1)];
       this.enemies.push({
         ...meta,
         hp: meta.hp + (this.floor - 1) * 2,
+        maxHp: meta.hp + (this.floor - 1) * 2,
         x: ex,
-        y: ey
+        y: ey,
+        stunned: false
       });
     }
 
-    this.log(`深入第 ${this.floor} 层，遭遇了异化面孔宿敌！`);
+    this.log(`深入第 ${this.floor} 层！利用击退台球碰撞消灭敌人。`);
     this.render();
   }
 
-  isBlocked(x, y) {
+  initBossFloor() {
+    this.log(`⚠️ 警报：遭遇终极领主【千面魔尊】！`);
+    const bMeta = MONSTERS_META.find(m => m.type === 'boss');
+    this.bossRef = {
+      ...bMeta,
+      hp: 30,
+      maxHp: 30,
+      x: 3,
+      y: 3,
+      turns: 0,
+      stunned: false
+    };
+    this.enemies.push(this.bossRef);
+    this.spawnProp('tnt', 3);
+    this.render();
+  }
+
+  spawnProp(type, count) {
+    for (let i = 0; i < count; i++) {
+      let px, py;
+      do {
+        px = Math.floor(Math.random() * this.size);
+        py = Math.floor(Math.random() * this.size);
+      } while (this.isOccupied(px, py) || (px === 0 && py === 0) || (px === this.exit.x && py === this.exit.y));
+      this.props.push({ x: px, y: py, type });
+    }
+  }
+
+  isOccupied(x, y) {
     if (x < 0 || y < 0 || x >= this.size || y >= this.size) return true;
-    return this.walls.some(w => w.x === x && w.y === y);
+    if (this.walls.some(w => w.x === x && w.y === y)) return true;
+    if (this.props.some(p => p.x === x && p.y === y)) return true;
+    if (this.enemies.some(e => e.x === x && e.y === y)) return true;
+    return false;
   }
 
   handleKey(e) {
+    Sound.init();
     if (this.hp <= 0) return;
     if (['ArrowUp', 'KeyW'].includes(e.code)) this.move(0, -1);
     if (['ArrowDown', 'KeyS'].includes(e.code)) this.move(0, 1);
@@ -435,27 +604,95 @@ class MicroRogue {
     if (['ArrowRight', 'KeyD'].includes(e.code)) this.move(1, 0);
   }
 
+  // 移动与台球连锁判定
   move(dx, dy) {
+    Sound.init();
     const nx = this.pos.x + dx;
     const ny = this.pos.y + dy;
-    if (this.isBlocked(nx, ny)) return;
 
-    // 撞击攻击怪物
+    if (nx < 0 || ny < 0 || nx >= this.size || ny >= this.size) return;
+    if (this.walls.some(w => w.x === nx && w.y === ny)) return;
+
+    // 交互物品（箱子、TNT、商店、祭坛）
+    const propIdx = this.props.findIndex(p => p.x === nx && p.y === ny);
+    if (propIdx >= 0) {
+      const p = this.props[propIdx];
+      if (p.type === 'crate') {
+        Sound.hit();
+        this.props.splice(propIdx, 1);
+        let goldGain = this.hasRelic('greed') ? 6 : 3;
+        this.gold += goldGain;
+        this.log(`📦 击碎木箱！获得 ${goldGain} 金币！`);
+        this.nextTurn();
+        return;
+      } else if (p.type === 'tnt') {
+        this.triggerExplosion(nx, ny);
+        this.props.splice(propIdx, 1);
+        this.nextTurn();
+        return;
+      } else if (p.type === 'shop') {
+        this.openShopModal();
+        return;
+      } else if (p.type === 'shrine') {
+        this.openShrineModal(propIdx);
+        return;
+      }
+    }
+
+    // 撞击敌人：攻击 + 台球式击退连锁
     const targetIdx = this.enemies.findIndex(e => e.x === nx && e.y === ny);
     if (targetIdx >= 0) {
-      let dmg = 2;
-      if (this.crit) {
-        dmg = 6;
-        this.crit = false;
-        this.log(`💥 墨镜破译暴击！造成 ${dmg} 点巨大创伤！`);
-      } else {
-        this.log(`⚔️ 小队撞击 ${this.enemies[targetIdx].name} 造成 ${dmg} 伤害。`);
+      const enemy = this.enemies[targetIdx];
+      let isCrit = this.crit || (this.hasSynergy('智识眼镜') && Math.random() < 0.25);
+      let dmg = isCrit ? 6 : 2;
+      this.crit = false;
+
+      if (isCrit) Sound.crit(); else Sound.hit();
+      this.showPopText(nx, ny, isCrit ? `CRIT -${dmg}` : `-${dmg}`, '#ef4444');
+      enemy.hp -= dmg;
+      this.log(`⚔️ 撞击 ${enemy.name}，造成 ${dmg} 伤害！`);
+
+      // 击退运算
+      const pushX = nx + dx;
+      const pushY = ny + dy;
+      
+      // 撞击墙体判定
+      if (pushX < 0 || pushY < 0 || pushX >= this.size || pushY >= this.size || this.walls.some(w => w.x === pushX && w.y === pushY)) {
+        let wallDmg = this.hasRelic('heavy') ? 5 : 2;
+        enemy.hp -= wallDmg;
+        this.triggerShake();
+        this.showPopText(nx, ny, `撞墙 -${wallDmg}`, '#f59e0b');
+        this.log(`💥 撞墙冲击！${enemy.name} 受到额外 ${wallDmg} 点震击伤害！`);
       }
-      this.enemies[targetIdx].hp -= dmg;
-      if (this.enemies[targetIdx].hp <= 0) {
-        this.log(`💀 击破 ${this.enemies[targetIdx].name}！`);
-        this.enemies.splice(targetIdx, 1);
+      // 台球连锁：撞击另一个敌人
+      else {
+        const otherEnemyIdx = this.enemies.findIndex(o => o !== enemy && o.x === pushX && o.y === pushY);
+        if (otherEnemyIdx >= 0) {
+          const other = this.enemies[otherEnemyIdx];
+          let chainDmg = (this.chainBoost ? 3 : 1) * (this.hasRelic('heavy') ? 4 : 2);
+          this.chainBoost = false;
+          enemy.hp -= chainDmg;
+          other.hp -= chainDmg;
+          other.stunned = true; // 被撞击的目标眩晕 1 回合
+          this.triggerShake();
+          Sound.boom();
+          this.showPopText(pushX, pushY, `连锁 -${chainDmg} 💫`, '#f59e0b');
+          this.log(`🎱 台球连锁碰撞！${enemy.name} 与 ${other.name} 互撞各受 ${chainDmg} 伤害并眩晕！`);
+          if (other.hp <= 0) this.killEnemy(otherEnemyIdx);
+        } else {
+          // 撞击 TNT 桶
+          const tntIdx = this.props.findIndex(p => p.x === pushX && p.y === pushY && p.type === 'tnt');
+          if (tntIdx >= 0) {
+            this.props.splice(tntIdx, 1);
+            this.triggerExplosion(pushX, pushY);
+          } else {
+            enemy.x = pushX;
+            enemy.y = pushY;
+          }
+        }
       }
+
+      if (enemy.hp <= 0) this.killEnemy(targetIdx);
       this.nextTurn();
       return;
     }
@@ -465,95 +702,351 @@ class MicroRogue {
     // 拾取补给
     const fIdx = this.food.findIndex(f => f.x === nx && f.y === ny);
     if (fIdx >= 0) {
+      Sound.heal();
       this.hp = Math.min(this.maxHp, this.hp + 6);
       this.food.splice(fIdx, 1);
-      this.log(`🍎 拾取应急能源，恢复 6 点 HP！`);
+      this.showPopText(nx, ny, '+6 HP', '#10b981');
+      this.log(`🍎 拾取应急补给，全队回复 6 HP！`);
     }
 
-    // 通关下潜
+    // 抵达楼梯通关下一层
     if (this.pos.x === this.exit.x && this.pos.y === this.exit.y) {
-      if (this.floor >= 5) {
-        this.finishModal('🏆 突破成功！', '你带领面孔战队成功击穿了深渊！');
+      if (this.floor >= 6) {
+        this.finishGame(true);
         return;
       }
-      this.initFloor(this.floor + 1);
+      this.showRelicDraft();
       return;
     }
 
     this.nextTurn();
   }
 
+  triggerExplosion(x, y) {
+    Sound.boom();
+    this.triggerShake();
+    this.log(`🧨 轰！炸药桶引爆，重创周围九格！`);
+    for (let i = this.enemies.length - 1; i >= 0; i--) {
+      let e = this.enemies[i];
+      if (Math.abs(e.x - x) <= 1 && Math.abs(e.y - y) <= 1) {
+        e.hp -= 6;
+        this.showPopText(e.x, e.y, `-6 爆炸`, '#ef4444');
+        if (e.hp <= 0) this.killEnemy(i);
+      }
+    }
+    if (Math.abs(this.pos.x - x) <= 1 && Math.abs(this.pos.y - y) <= 1) {
+      this.takeDamage(4, '炸药波及');
+    }
+  }
+
+  killEnemy(idx) {
+    const e = this.enemies[idx];
+    this.log(`💀 歼灭了 ${e.name}！`);
+    this.enemies.splice(idx, 1);
+    let goldDrop = (this.hasRelic('greed') ? 4 : 2) + Math.floor(Math.random() * 2);
+    this.gold += goldDrop;
+    
+    if (this.hasRelic('vampire')) {
+      this.hp = Math.min(this.maxHp, this.hp + 2);
+      this.showPopText(this.pos.x, this.pos.y, '+2 吸血', '#10b981');
+    }
+    if (this.hasRelic('shield_up')) {
+      this.shield += 2;
+      this.showPopText(this.pos.x, this.pos.y, '+2 护甲', '#60a5fa');
+    }
+    if (e.type === 'boss') {
+      this.finishGame(true);
+    }
+  }
+
   nextTurn() {
-    // 冷却结算
     this.squad.forEach(h => { if (h.currentCd > 0) h.currentCd--; });
 
-    // 敌人行动
     if (this.freeze > 0) {
       this.freeze--;
-      this.log(`❄️ 敌人处于冰冻状态，无法动弹！`);
+      this.log(`❄️ 全场敌人处于绝对零度冰冻中！`);
     } else {
-      this.enemies.forEach(e => {
+      // 敌人轮流行动
+      for (let i = this.enemies.length - 1; i >= 0; i--) {
+        const e = this.enemies[i];
+        if (e.stunned) {
+          e.stunned = false;
+          this.log(`💫 ${e.name} 处于眩晕状态，跳过本回合！`);
+          continue;
+        }
+
         const d = Math.abs(e.x - this.pos.x) + Math.abs(e.y - this.pos.y);
-        if (d === 1) {
-          this.hp -= e.atk;
-          this.log(`🩸 被 ${e.name} 攻击，承受 ${e.atk} 点伤害！`);
-        } else if (d > 1) {
-          let stepX = Math.sign(this.pos.x - e.x);
-          let stepY = Math.sign(this.pos.y - e.y);
-          if (stepX !== 0 && !this.isBlocked(e.x + stepX, e.y) && !this.enemies.some(m => m.x === e.x + stepX && m.y === e.y)) {
-            e.x += stepX;
-          } else if (stepY !== 0 && !this.isBlocked(e.x, e.y + stepY) && !this.enemies.some(m => m.x === e.x && m.y === e.y)) {
-            e.y += stepY;
+
+        // BOSS 战特殊 AI 机制
+        if (e.type === 'boss') {
+          e.turns++;
+          if (e.turns % 3 === 0) {
+            // 召唤小兵
+            let sx = (e.x + 1) % this.size;
+            let sy = e.y;
+            if (!this.isOccupied(sx, sy)) {
+              this.enemies.push({ ...MONSTERS_META[0], hp: 5, maxHp: 5, x: sx, y: sy, stunned: false });
+              this.log(`👑 千面魔尊召唤了暗影刺客随从！`);
+            }
+          }
+          if (d <= 2) {
+            this.takeDamage(e.atk, e.name);
+            continue;
           }
         }
-      });
+
+        // 自爆怪贴身
+        if (e.type === 'bomber' && d === 1) {
+          this.takeDamage(e.atk, e.name);
+          this.enemies.splice(i, 1);
+          continue;
+        }
+
+        // 远程射手 (3格内直线)
+        if (e.type === 'ranged' && (e.x === this.pos.x || e.y === this.pos.y) && d <= 3) {
+          this.takeDamage(e.atk, e.name);
+          continue;
+        }
+
+        // 近战攻击或移动追击
+        if (d === 1) {
+          this.takeDamage(e.atk, e.name);
+          if (this.hasRelic('thorns')) {
+            e.hp -= 2;
+            this.showPopText(e.x, e.y, `-2 荆棘`, '#f59e0b');
+            if (e.hp <= 0) this.killEnemy(i);
+          }
+        } else {
+          let sx = Math.sign(this.pos.x - e.x);
+          let sy = Math.sign(this.pos.y - e.y);
+          if (sx !== 0 && !this.isOccupied(e.x + sx, e.y)) e.x += sx;
+          else if (sy !== 0 && !this.isOccupied(e.x, e.y + sy)) e.y += sy;
+        }
+      }
     }
 
     if (this.hp <= 0) {
       this.hp = 0;
       this.render();
-      this.finishModal('💀 小队倒下', `止步于第 ${this.floor} 层。肉鸽的核心在于重整旗鼓！`);
+      this.finishGame(false);
       return;
     }
 
     this.render();
   }
 
+  takeDamage(amount, sourceName) {
+    if (this.hasSynergy('帽子同盟') && Math.random() < 0.25) {
+      this.log(`💨 帽子同盟敏捷闪避了 ${sourceName} 的攻击！`);
+      this.showPopText(this.pos.x, this.pos.y, '闪避!', '#93c5fd');
+      return;
+    }
+
+    let actual = amount;
+    if (this.hasSynergy('硬派胡子')) actual = Math.max(1, actual - 1);
+
+    if (this.shield > 0) {
+      let absorbed = Math.min(this.shield, actual);
+      this.shield -= absorbed;
+      actual -= absorbed;
+      this.showPopText(this.pos.x, this.pos.y, `格挡 -${absorbed}`, '#60a5fa');
+    }
+
+    if (actual > 0) {
+      this.hp -= actual;
+      this.triggerShake();
+      Sound.hit();
+      this.showPopText(this.pos.x, this.pos.y, `-${actual}`, '#ef4444');
+      this.log(`🩸 被 ${sourceName} 命中，受到 ${actual} 伤害！`);
+    }
+  }
+
   useSkill(idx) {
+    Sound.init();
     const h = this.squad[idx];
     if (h.currentCd > 0) return;
+    Sound.skill();
 
     if (h.id === 'chef') {
       this.hp = Math.min(this.maxHp, this.hp + 6);
-      this.log(`👨‍🍳 主厨开启盛宴，恢复 6 HP！`);
+      this.showPopText(this.pos.x, this.pos.y, '+6 HP', '#10b981');
+      this.log(`👨‍🍳 主厨制作盛宴，全队回血 6 点！`);
     } else if (h.id === 'cowboy') {
       if (this.enemies.length === 0) return;
-      let target = this.enemies[0];
-      target.hp -= 4;
-      this.log(`🤠 牛仔点杀！对 ${target.name} 造成 4 伤害！`);
-      if (target.hp <= 0) this.enemies.splice(0, 1);
+      const target = this.enemies[0];
+      target.hp -= 5;
+      Sound.hit();
+      this.showPopText(target.x, target.y, '-5 狙击', '#ef4444');
+      this.log(`🤠 牛仔套索射击！点杀 ${target.name} (-5 HP)！`);
+      if (target.hp <= 0) this.killEnemy(0);
+    } else if (h.id === 'agent') {
+      this.crit = true;
+      this.log(`🕶️ 墨镜特工破译破绽，下一次斩击暴击 300%！`);
     } else if (h.id === 'helmet') {
+      this.shield += 4;
       this.enemies.forEach(e => {
         if (Math.abs(e.x - this.pos.x) + Math.abs(e.y - this.pos.y) <= 2) {
-          e.hp -= 2;
-          this.log(`⛑️ 冲撞波及 ${e.name} (-2 HP)！`);
+          e.hp -= 3;
+          this.showPopText(e.x, e.y, '-3 冲撞', '#ef4444');
         }
       });
       this.enemies = this.enemies.filter(e => e.hp > 0);
-    } else if (h.id === 'agent') {
-      this.crit = true;
-      this.log(`🕶️ 特工洞察破绽，下次平砍 300% 伤害！`);
-    } else if (h.id === 'headphone') {
-      this.squad.forEach((s, sidx) => { if (sidx !== idx) s.currentCd = 0; });
-      this.log(`🎧 节奏超频，队友技能全部即刻重置！`);
+      this.log(`⛑️ 橄榄球手震荡周围所有敌人，并获得 4 点护甲！`);
+    } else if (h.id === 'geek') {
+      this.squad.forEach((s, i) => { if (i !== idx) s.currentCd = 0; });
+      this.gold += 3;
+      this.log(`🤓 极客战术超频，队友技能全部就绪并黑入 3 枚金币！`);
     } else if (h.id === 'beanie') {
       this.freeze = 2;
-      this.log(`🥶 冰霜冻结全场敌军 2 回合！`);
+      this.log(`🥶 雪帽客释放寒流，冰冻全场敌人 2 回合！`);
+    } else if (h.id === 'pilot') {
+      this.spawnProp('tnt', 1);
+      this.food.push({ x: (this.pos.x + 1) % this.size, y: this.pos.y });
+      this.log(`🛩️ 飞行员精准空投！投放了急救包与炸药桶！`);
+    } else if (h.id === 'clown') {
+      this.chainBoost = true;
+      this.log(`🎩 胡子绅士蓄力完成：下一次台球连锁撞击伤害提升 300%！`);
     }
 
     h.currentCd = h.cd;
     this.nextTurn();
   }
+
+  // 黑市商店弹窗
+  openShopModal() {
+    const o = document.getElementById('overlay');
+    document.getElementById('modal-title').innerText = '⛺ 战地黑市商人';
+    document.getElementById('modal-desc').innerText = `当前持有: 🪙 ${this.gold} 金币。点击即可购买：`;
+    const grid = document.getElementById('modal-grid');
+    grid.innerHTML = '';
+
+    const items = [
+      { name: '大补给便当', cost: 4, desc: '回复 10 点生命', action: () => { this.hp = Math.min(this.maxHp, this.hp + 10); } },
+      { name: '重装护盾包', cost: 5, desc: '获得 8 点护甲', action: () => { this.shield += 8; } },
+      { name: '狂暴合剂', cost: 6, desc: '全队技能立即清空冷却', action: () => { this.squad.forEach(h => h.currentCd = 0); } }
+    ];
+
+    items.forEach(it => {
+      const card = document.createElement('div');
+      card.className = 'modal-card';
+      card.innerHTML = `
+        <div style="font-size:1.6rem;">🏷️</div>
+        <div class="name">${it.name}</div>
+        <div style="font-size:0.65rem; color:#f59e0b;">🪙 ${it.cost} 金币</div>
+        <div style="font-size:0.58rem; color:#9ca3af; text-align:center;">${it.desc}</div>
+      `;
+      card.onclick = () => {
+        if (this.gold >= it.cost) {
+          this.gold -= it.cost;
+          Sound.coin();
+          it.action();
+          o.classList.add('hidden');
+          this.render();
+        } else {
+          alert('金币不足！');
+        }
+      };
+      grid.appendChild(card);
+    });
+
+    const btn = document.getElementById('modal-act');
+    btn.innerText = '离开商店';
+    btn.disabled = false;
+    btn.onclick = () => o.classList.add('hidden');
+    o.classList.remove('hidden');
+  }
+
+  // 神秘祭坛
+  openShrineModal(propIdx) {
+    const o = document.getElementById('overlay');
+    document.getElementById('modal-title').innerText = '⛩️ 远古面孔祭坛';
+    document.getElementById('modal-desc').innerText = '接受祭坛的试炼以获取强大的加护：';
+    const grid = document.getElementById('modal-grid');
+    grid.innerHTML = '';
+
+    const choices = [
+      { name: '鲜血契约', desc: '扣除 4 点当前生命，获得 10 枚金币', run: () => { this.hp = Math.max(1, this.hp - 4); this.gold += 10; } },
+      { name: '圣水洗礼', desc: '全额回满生命值', run: () => { this.hp = this.maxHp; } }
+    ];
+
+    choices.forEach(c => {
+      const card = document.createElement('div');
+      card.className = 'modal-card';
+      card.innerHTML = `
+        <div style="font-size:1.6rem;">🔮</div>
+        <div class="name">${c.name}</div>
+        <div style="font-size:0.6rem; color:#9ca3af; text-align:center;">${c.desc}</div>
+      `;
+      card.onclick = () => {
+        Sound.heal();
+        c.run();
+        this.props.splice(propIdx, 1);
+        o.classList.add('hidden');
+        this.render();
+      };
+      grid.appendChild(card);
+    });
+
+    const btn = document.getElementById('modal-act');
+    btn.innerText = '拒绝离开';
+    btn.disabled = false;
+    btn.onclick = () => o.classList.add('hidden');
+    o.classList.remove('hidden');
+  }
+
+  // 通关遗物三选一
+  showRelicDraft() {
+    const o = document.getElementById('overlay');
+    document.getElementById('modal-title').innerText = `🎉 突破第 ${this.floor} 层！抽取遗物`;
+    document.getElementById('modal-desc').innerText = '挑选 1 件遗物，整场探险永久生效：';
+    const grid = document.getElementById('modal-grid');
+    grid.innerHTML = '';
+
+    const choices = RELIC_POOL.filter(r => !this.hasRelic(r.id)).slice(0, 3);
+    choices.forEach(r => {
+      const card = document.createElement('div');
+      card.className = 'modal-card';
+      card.innerHTML = `
+        <div style="font-size:1.6rem; margin-top:2px;">💎</div>
+        <div class="name" style="margin-top:2px;">${r.name}</div>
+        <div style="font-size:0.62rem; color:#9ca3af; text-align:center;">${r.desc}</div>
+      `;
+      card.onclick = () => {
+        Sound.coin();
+        this.relics.push(r);
+        document.getElementById('relic-bar').innerText = '遗物: ' + this.relics.map(x => x.name).join(' | ');
+        o.classList.add('hidden');
+        this.initFloor(this.floor + 1);
+      };
+      grid.appendChild(card);
+    });
+
+    document.getElementById('modal-act').style.display = 'none';
+    o.classList.remove('hidden');
+  }
+
+  showPopText(x, y, text, color) {
+    const board = document.getElementById('board');
+    const float = document.createElement('div');
+    float.className = 'float-text';
+    float.innerText = text;
+    float.style.color = color;
+    float.style.left = `${(x / 6) * 100 + 5}%`;
+    float.style.top = `${(y / 6) * 100 + 5}%`;
+    board.appendChild(float);
+    setTimeout(() => float.remove(), 600);
+  }
+
+  triggerShake() {
+    const app = document.getElementById('app');
+    app.classList.remove('shake');
+    void app.offsetWidth;
+    app.classList.add('shake');
+    setTimeout(() => app.classList.remove('shake'), 250);
+  }
+
+  hasRelic(id) { return this.relics.some(r => r.id === id); }
+  hasSynergy(name) { return this.activeSynergies.some(s => s.name === name); }
 
   log(msg) {
     const l = document.getElementById('log');
@@ -562,12 +1055,16 @@ class MicroRogue {
     l.prepend(d);
   }
 
-  finishModal(title, sub) {
+  finishGame(isWin) {
     const o = document.getElementById('overlay');
-    document.getElementById('modal-title').innerText = title;
-    document.getElementById('modal-btn').innerText = '重开一局';
-    document.getElementById('modal-btn').disabled = false;
-    document.getElementById('modal-btn').onclick = () => location.reload();
+    document.getElementById('modal-title').innerText = isWin ? '👑 终极征服：千面陨落！' : '💀 远征终结';
+    document.getElementById('modal-desc').innerText = isWin ? `你率领面孔军团彻底荡平了第 6 层深渊！结算金币: 🪙 ${this.gold}` : `在第 ${this.floor} 层力竭倒下。重整羁绊与遗物再度挑战吧！`;
+    document.getElementById('modal-grid').innerHTML = '';
+    const btn = document.getElementById('modal-act');
+    btn.style.display = 'block';
+    btn.innerText = '重新开启探险';
+    btn.disabled = false;
+    btn.onclick = () => location.reload();
     o.classList.remove('hidden');
   }
 
@@ -577,16 +1074,14 @@ class MicroRogue {
     this.squad.forEach((h, i) => {
       const slot = document.createElement('div');
       slot.className = 'hero-slot';
-      
       const img = document.createElement('div');
       img.className = 'face-sprite';
       applySprite(img, h.col, h.row);
-
       slot.appendChild(img);
       slot.innerHTML += `
         <div class="name">${h.name}</div>
         <button class="skill-btn" id="sbtn-${i}" onclick="game.useSkill(${i})">
-          ${h.currentCd > 0 ? `CD: ${h.currentCd}` : h.skill}
+          ${h.currentCd > 0 ? `CD:${h.currentCd}` : h.skill}
         </button>
       `;
       bar.appendChild(slot);
@@ -595,10 +1090,13 @@ class MicroRogue {
 
   render() {
     document.getElementById('ui-hp').innerText = `${this.hp}/${this.maxHp}`;
+    document.getElementById('ui-shield').innerText = this.shield;
+    document.getElementById('ui-gold').innerText = this.gold;
+
     this.squad.forEach((h, i) => {
       const btn = document.getElementById(`sbtn-${i}`);
       if (btn) {
-        btn.innerText = h.currentCd > 0 ? `CD: ${h.currentCd}` : h.skill;
+        btn.innerText = h.currentCd > 0 ? `CD:${h.currentCd}` : h.skill;
         btn.disabled = h.currentCd > 0;
       }
     });
@@ -615,20 +1113,26 @@ class MicroRogue {
           tile.classList.add('player-box');
           const face = document.createElement('div');
           face.className = 'face-sprite';
-          // 棋盘上显示当前领队角色的 3D 脸庞
           applySprite(face, this.squad[0].col, this.squad[0].row);
           tile.appendChild(face);
-        } else if (x === this.exit.x && y === this.exit.y) {
+        } else if (x === this.exit.x && y === this.exit.y && this.floor < 6) {
           tile.classList.add('exit');
           tile.innerText = '🚪';
         } else if (this.walls.some(w => w.x === x && w.y === y)) {
           tile.classList.add('wall');
           tile.innerText = '🧱';
         } else {
+          const prop = this.props.find(p => p.x === x && p.y === y);
           const enemy = this.enemies.find(e => e.x === x && e.y === y);
           const food = this.food.find(f => f.x === x && f.y === y);
 
-          if (enemy) {
+          if (prop) {
+            if (prop.type === 'tnt') tile.innerText = '🧨';
+            if (prop.type === 'crate') tile.innerText = '📦';
+            if (prop.type === 'shop') tile.innerText = '⛺';
+            if (prop.type === 'shrine') tile.innerText = '⛩️';
+          } else if (enemy) {
+            if (enemy.type === 'boss') tile.classList.add('boss-box');
             const eface = document.createElement('div');
             eface.className = 'face-sprite';
             applySprite(eface, enemy.col, enemy.row);
@@ -638,12 +1142,23 @@ class MicroRogue {
             badge.className = 'tile-badge';
             badge.innerText = enemy.hp;
             tile.appendChild(badge);
+
+            const intent = document.createElement('div');
+            intent.className = 'intent-icon';
+            intent.innerText = enemy.intent;
+            tile.appendChild(intent);
+
+            if (enemy.stunned) {
+              const stun = document.createElement('div');
+              stun.className = 'stun-icon';
+              stun.innerText = '💫';
+              tile.appendChild(stun);
+            }
           } else if (food) {
             tile.innerText = '🍎';
           }
         }
 
-        // 点击相邻格子移动
         tile.onclick = () => {
           let dx = x - this.pos.x;
           let dy = y - this.pos.y;
@@ -656,7 +1171,7 @@ class MicroRogue {
   }
 }
 
-const game = new MicroRogue();
+const game = new UltimateRogue();
 </script>
 </body>
 </html>
