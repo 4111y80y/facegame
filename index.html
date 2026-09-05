@@ -2,21 +2,21 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>面孔联盟：微型肉鸽 (Face League: Micro-Rogue)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>面孔联盟：3D肉鸽 (Face League: Micro-Rogue)</title>
 <style>
   :root {
-    --bg: #12131a;
-    --card: #1f2230;
-    --accent: #4f75ff;
-    --accent-gold: #f5a623;
-    --danger: #ff4757;
-    --hp: #2ed573;
-    --text: #f1f2f6;
-    --text-dim: #a4b0be;
-    --border: #2f3542;
+    --face-img: url('faces.png');
+    --bg: #10121a;
+    --card: #1a1d29;
+    --accent: #3b82f6;
+    --accent-gold: #f59e0b;
+    --danger: #ef4444;
+    --hp: #10b981;
+    --border: #2d3348;
+    --text: #f3f4f6;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
   body {
     background: var(--bg);
     color: var(--text);
@@ -25,342 +25,406 @@
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    padding: 16px;
+    padding: 10px;
   }
-  #game-container {
+  #app {
     background: var(--card);
+    width: 100%;
+    max-width: 440px;
     border-radius: 16px;
     border: 1px solid var(--border);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-    width: 100%;
-    max-width: 480px;
-    padding: 18px;
+    padding: 14px;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
   }
+
+  /* 核心：把大图切成头像的基础样式 (11列 x 7行) */
+  .face-sprite {
+    background-image: var(--face-img);
+    background-repeat: no-repeat;
+    background-size: 1100% 700%;
+    background-color: #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+  }
+
+  /* 顶部加载图片提示栏（未找到图片时手机可一键相册载入） */
+  #img-bar {
+    background: #252b3d;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px dashed var(--accent-gold);
+  }
+  #img-bar input { display: none; }
+  .upload-btn {
+    background: var(--accent-gold);
+    color: #000;
+    font-weight: bold;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  /* 顶栏状态 */
   header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--border);
-    padding-bottom: 10px;
+    padding-bottom: 8px;
   }
-  header h1 { font-size: 1.15rem; font-weight: 700; color: #fff; }
-  .stats { font-size: 0.85rem; color: var(--text-dim); display: flex; gap: 12px; }
-  .stats span b { color: var(--accent-gold); }
+  .title { font-weight: 800; font-size: 1rem; }
+  .stats { font-size: 0.8rem; display: flex; gap: 10px; }
+  .stats b { color: var(--accent-gold); }
 
-  /* Squad Bar */
+  /* 3人英雄出战栏 */
   .squad-bar {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
   }
-  .hero-card {
-    background: rgba(255,255,255,0.04);
+  .hero-slot {
+    background: #141622;
     border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 8px;
+    padding: 6px;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 4px;
-    position: relative;
   }
-  .hero-card.dead { opacity: 0.35; filter: grayscale(1); }
-  .hero-card .avatar { font-size: 2rem; }
-  .hero-card .name { font-size: 0.75rem; font-weight: 600; }
-  .hero-card .skill-btn {
+  .hero-slot .face-sprite { width: 42px; height: 42px; }
+  .hero-slot .name { font-size: 0.7rem; font-weight: 700; }
+  .skill-btn {
     width: 100%;
     padding: 4px 0;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     background: var(--accent);
     color: #fff;
     border: none;
     border-radius: 4px;
     cursor: pointer;
   }
-  .hero-card .skill-btn:disabled {
-    background: #3a3e52;
-    color: #747d8c;
-    cursor: not-allowed;
-  }
+  .skill-btn:disabled { background: #2f354a; color: #6b7280; }
 
-  /* Dungeon Grid */
+  /* 地牢棋盘 (6x6) */
   #board {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     grid-template-rows: repeat(6, 1fr);
     gap: 4px;
-    background: #151821;
-    border-radius: 10px;
+    background: #12141c;
+    border-radius: 12px;
     padding: 6px;
     aspect-ratio: 1 / 1;
-    border: 1px solid #232738;
+    border: 1px solid var(--border);
   }
   .tile {
-    background: #1c202d;
-    border-radius: 6px;
+    background: #1c202e;
+    border-radius: 8px;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 1.6rem;
-    cursor: pointer;
     position: relative;
-    transition: transform 0.1s, background 0.15s;
   }
-  .tile:hover { background: #262c3e; }
-  .tile.wall { background: #0f1118; cursor: not-allowed; }
-  .tile.player { background: #26335a; box-shadow: inset 0 0 0 2px var(--accent); }
-  .tile.exit { background: #3d3419; }
-  .tile-hp {
+  .tile.wall { background: #0f1017; }
+  .tile.exit { background: #2a2210; box-shadow: inset 0 0 0 2px var(--accent-gold); }
+  .tile.player-box { background: #1c2847; box-shadow: inset 0 0 0 2px var(--accent); }
+  .tile .face-sprite { width: 85%; height: 85%; }
+  .tile-badge {
     position: absolute;
     bottom: 2px;
     font-size: 0.65rem;
-    font-weight: bold;
+    font-weight: 800;
+    background: rgba(0,0,0,0.85);
     color: var(--danger);
-    background: rgba(0,0,0,0.7);
     padding: 0 4px;
     border-radius: 4px;
   }
 
-  /* Log & Controls */
+  /* 状态信息条 */
   #log {
-    height: 48px;
-    background: #151821;
-    border-radius: 8px;
-    padding: 6px 10px;
-    font-size: 0.75rem;
-    color: var(--text-dim);
+    height: 38px;
+    background: #13151f;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.72rem;
+    color: #9ca3af;
     overflow-y: auto;
     display: flex;
     flex-direction: column-reverse;
   }
-  .d-pad {
+
+  /* 触控轮盘 */
+  .ctrl-pad {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 6px;
-    max-width: 200px;
+    max-width: 190px;
     margin: 0 auto;
   }
-  .d-btn {
-    background: #282e42;
+  .ctrl-btn {
+    background: #24293c;
     color: #fff;
     border: none;
     border-radius: 8px;
-    padding: 12px;
-    font-size: 1rem;
+    padding: 10px;
+    font-size: 1.1rem;
     cursor: pointer;
   }
-  .d-btn:active { background: var(--accent); }
+  .ctrl-btn:active { background: var(--accent); }
 
-  /* Modal Screen (Team Pick / Game Over) */
+  /* 选人与结算全屏遮罩 */
   #overlay {
     position: absolute;
     inset: 0;
-    background: rgba(10, 12, 18, 0.95);
+    background: rgba(12, 14, 21, 0.96);
     border-radius: 16px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 24px;
-    gap: 16px;
-    z-index: 100;
+    padding: 16px;
+    gap: 12px;
+    z-index: 99;
   }
   #overlay.hidden { display: none; }
   .roster-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
+    gap: 8px;
     width: 100%;
+    max-height: 280px;
+    overflow-y: auto;
   }
   .roster-item {
-    background: #1c202d;
+    background: #191c28;
     border: 2px solid var(--border);
     border-radius: 8px;
-    padding: 10px;
-    text-align: center;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
     cursor: pointer;
-    transition: all 0.15s;
   }
-  .roster-item.selected { border-color: var(--accent-gold); background: #282b3d; }
+  .roster-item.active { border-color: var(--accent-gold); background: #24283b; }
+  .roster-item .face-sprite { width: 46px; height: 46px; }
   .start-btn {
     background: var(--accent);
     color: #fff;
     border: none;
     padding: 10px 24px;
-    font-size: 1rem;
     font-weight: 700;
     border-radius: 8px;
     cursor: pointer;
+    width: 80%;
   }
 </style>
 </head>
 <body>
 
-<div id="game-container" style="position: relative;">
+<div id="app">
+  <!-- 手机选图辅助条 -->
+  <div id="img-bar">
+    <span>原图未显示？点此加载本地截图：</span>
+    <label class="upload-btn" for="local-file">选图</label>
+    <input type="file" id="local-file" accept="image/*">
+  </div>
+
   <header>
-    <h1>面孔联盟 (Face League)</h1>
+    <div class="title">面孔联盟 (Face League)</div>
     <div class="stats">
       <span>第 <b id="ui-floor">1</b> 层</span>
-      <span>生命: <b id="ui-hp" style="color:var(--hp)">18/18</b></span>
+      <span>生命: <b id="ui-hp" style="color:var(--hp)">20/20</b></span>
     </div>
   </header>
 
+  <!-- 3名角色状态栏 -->
   <div class="squad-bar" id="squad-bar"></div>
 
+  <!-- 6x6 地下城 -->
   <div id="board"></div>
 
+  <!-- 战况播报 -->
   <div id="log"></div>
 
-  <div class="d-pad">
+  <!-- 手机虚拟摇杆 -->
+  <div class="ctrl-pad">
     <div></div>
-    <button class="d-btn" onclick="game.move(0, -1)">▲</button>
+    <button class="ctrl-btn" onclick="game.move(0, -1)">▲</button>
     <div></div>
-    <button class="d-btn" onclick="game.move(-1, 0)">◀</button>
-    <button class="d-btn" onclick="game.move(0, 1)">▼</button>
-    <button class="d-btn" onclick="game.move(1, 0)">▶</button>
+    <button class="ctrl-btn" onclick="game.move(-1, 0)">◀</button>
+    <button class="ctrl-btn" onclick="game.move(0, 1)">▼</button>
+    <button class="ctrl-btn" onclick="game.move(1, 0)">▶</button>
   </div>
 
+  <!-- 选角与复活弹窗 -->
   <div id="overlay">
-    <h2 id="modal-title">集结你的 3 人先遣队</h2>
-    <p id="modal-sub" style="font-size:0.8rem; color:var(--text-dim); text-align:center;">
-      从具有鲜明特性的表情人物中任选 3 名开启地牢探险：
-    </p>
+    <h3 id="modal-title">集结 3 位面孔英雄</h3>
+    <div style="font-size:0.75rem; color:#9ca3af; text-align:center;">
+      从图中特征人物中任选 3 名开启地牢探险：
+    </div>
     <div class="roster-grid" id="roster"></div>
-    <button class="start-btn" id="modal-action-btn" onclick="game.confirmSquad()">出征 (0/3)</button>
+    <button class="start-btn" id="modal-btn" onclick="game.confirmSquad()">出征 (0/3)</button>
   </div>
 </div>
 
 <script>
-// 候选头像数据库 (对应原图各类代表人物)
-const HERO_DB = [
-  { id: 'chef', name: '主厨', avatar: '👨‍🍳', role: '治疗', desc: '做大餐: 回复全队 5 HP', cd: 4 },
-  { id: 'cowboy', name: '牛仔', avatar: '🤠', role: '狙击', desc: '套索射击: 击杀 2 格内最弱敌人', cd: 3 },
-  { id: 'helmet', name: '橄榄球手', avatar: '⛑️', role: '破盾', desc: '强力冲撞: 震退四周敌人并造成 2 伤', cd: 4 },
-  { id: 'hacker', name: '墨镜客', avatar: '🕶️', role: '刺客', desc: '弱点透视: 下次攻击造成 3 倍爆伤', cd: 4 },
-  { id: 'beanie', name: '毛线帽', avatar: '🥶', role: '控场', desc: '冰霜凝视: 冰冻全场敌人 1 回合', cd: 5 },
-  { id: 'glasses', name: '极客', avatar: '🤓', role: '辅助', desc: '战术扫描: 清空所有队友技能冷却 1 回合', cd: 6 }
+// 精准映射原图坐标 (11 列 x 7 行, col: 0~10, row: 0~6)
+const HEROES_META = [
+  { id: 'chef', name: '主厨', col: 6, row: 0, skill: '盛宴回复', cd: 4, desc: '全队回复 6 点生命' },
+  { id: 'cowboy', name: '西部牛仔', col: 1, row: 3, skill: '套索爆头', cd: 3, desc: '狙击距离最近敌人造成 4 伤' },
+  { id: 'helmet', name: '橄榄球手', col: 5, row: 3, skill: '重装冲撞', cd: 4, desc: '震荡周围所有敌人造成 2 伤' },
+  { id: 'agent', name: '墨镜特工', col: 2, row: 1, skill: '弱点洞察', cd: 4, desc: '下一次平砍产生 3 倍暴击' },
+  { id: 'headphone', name: '电竞选手', col: 7, row: 3, skill: '超频律动', cd: 5, desc: '刷新其余所有队友技能冷却' },
+  { id: 'beanie', name: '极地帽客', col: 9, row: 0, skill: '绝对零度', cd: 5, desc: '冰冻全场怪物 2 个回合' }
 ];
 
-const ENEMY_TYPES = [
-  { name: '阴影怪', avatar: '👾', hp: 3, atk: 2 },
-  { name: '冷酷墨镜', avatar: '👺', hp: 5, atk: 3 },
-  { name: '故障人偶', avatar: '🤖', hp: 4, atk: 4 }
+// 怪物同样取自大图中的其他面孔
+const MONSTERS_META = [
+  { name: '黄帽怪人', col: 10, row: 0, hp: 3, atk: 2 },
+  { name: '红连帽极客', col: 5, row: 2, hp: 4, atk: 3 },
+  { name: '黑超暴徒', col: 8, row: 1, hp: 5, atk: 4 }
 ];
 
-class Game {
+function applySprite(el, col, row) {
+  const x = (col / 10) * 100;
+  const y = (row / 6) * 100;
+  el.style.backgroundPosition = `${x}% ${y}%`;
+}
+
+class MicroRogue {
   constructor() {
     this.size = 6;
     this.floor = 1;
-    this.maxHp = 18;
-    this.hp = 18;
-    this.selectedHeroes = [];
+    this.hp = 20;
+    this.maxHp = 20;
+    this.selected = [];
     this.squad = [];
-    this.playerPos = { x: 0, y: 0 };
+    this.pos = { x: 0, y: 0 };
+    this.exit = { x: 5, y: 5 };
     this.enemies = [];
     this.walls = [];
-    this.exit = { x: 5, y: 5 };
-    this.potions = [];
-    this.critNext = false;
-    this.freezeTurns = 0;
-    
-    this.initRosterSelection();
+    this.food = [];
+    this.crit = false;
+    this.freeze = 0;
+
+    this.initFileUploader();
+    this.buildRosterUI();
     window.addEventListener('keydown', (e) => this.handleKey(e));
   }
 
-  initRosterSelection() {
-    const rosterEl = document.getElementById('roster');
-    rosterEl.innerHTML = '';
-    HERO_DB.forEach(hero => {
-      const card = document.createElement('div');
-      card.className = 'roster-item';
-      card.innerHTML = `
-        <div style="font-size:1.8rem;">${hero.avatar}</div>
-        <div style="font-size:0.8rem; font-weight:bold; margin-top:4px;">${hero.name}</div>
-        <div style="font-size:0.65rem; color:#a4b0be; margin-top:2px;">${hero.desc}</div>
-      `;
-      card.onclick = () => this.toggleSelectHero(hero, card);
-      rosterEl.appendChild(card);
+  initFileUploader() {
+    const input = document.getElementById('local-file');
+    input.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const url = URL.createObjectURL(file);
+        document.documentElement.style.setProperty('--face-img', `url("${url}")`);
+        document.getElementById('img-bar').style.display = 'none';
+        this.log('已成功绑定本地面孔大图！');
+      }
     });
   }
 
-  toggleSelectHero(hero, cardEl) {
-    const idx = this.selectedHeroes.findIndex(h => h.id === hero.id);
+  buildRosterUI() {
+    const roster = document.getElementById('roster');
+    roster.innerHTML = '';
+    HEROES_META.forEach(h => {
+      const card = document.createElement('div');
+      card.className = 'roster-item';
+      
+      const icon = document.createElement('div');
+      icon.className = 'face-sprite';
+      applySprite(icon, h.col, h.row);
+      
+      card.appendChild(icon);
+      card.innerHTML += `
+        <div class="name">${h.name}</div>
+        <div style="font-size:0.6rem; color:#9ca3af; text-align:center;">${h.desc}</div>
+      `;
+      card.onclick = () => this.toggleHero(h, card);
+      roster.appendChild(card);
+    });
+  }
+
+  toggleHero(h, card) {
+    const idx = this.selected.findIndex(x => x.id === h.id);
     if (idx >= 0) {
-      this.selectedHeroes.splice(idx, 1);
-      cardEl.classList.remove('selected');
-    } else if (this.selectedHeroes.length < 3) {
-      this.selectedHeroes.push({ ...hero, currentCd: 0 });
-      cardEl.classList.add('selected');
+      this.selected.splice(idx, 1);
+      card.classList.remove('active');
+    } else if (this.selected.length < 3) {
+      this.selected.push({ ...h, currentCd: 0 });
+      card.classList.add('active');
     }
-    const btn = document.getElementById('modal-action-btn');
-    btn.innerText = `出征 (${this.selectedHeroes.length}/3)`;
-    btn.disabled = this.selectedHeroes.length !== 3;
+    const btn = document.getElementById('modal-btn');
+    btn.innerText = `出征 (${this.selected.length}/3)`;
+    btn.disabled = this.selected.length !== 3;
   }
 
   confirmSquad() {
-    if (this.selectedHeroes.length !== 3) return;
-    this.squad = JSON.parse(JSON.stringify(this.selectedHeroes));
+    if (this.selected.length !== 3) return;
+    this.squad = JSON.parse(JSON.stringify(this.selected));
     document.getElementById('overlay').classList.add('hidden');
     this.renderSquadBar();
-    this.startFloor(1);
+    this.initFloor(1);
   }
 
-  startFloor(floorNum) {
+  initFloor(floorNum) {
     this.floor = floorNum;
     document.getElementById('ui-floor').innerText = this.floor;
-    this.log(`抵达地牢第 ${this.floor} 层。警惕四周！`);
-    
-    this.playerPos = { x: 0, y: 0 };
+    this.pos = { x: 0, y: 0 };
     this.exit = { x: this.size - 1, y: this.size - 1 };
-    
-    // 生成随机障碍墙 (4~6个)
     this.walls = [];
-    while (this.walls.length < 5) {
+    this.food = [];
+
+    // 随机生成 4 块障碍墙
+    while (this.walls.length < 4) {
       let wx = Math.floor(Math.random() * this.size);
       let wy = Math.floor(Math.random() * this.size);
       if ((wx === 0 && wy === 0) || (wx === this.exit.x && wy === this.exit.y)) continue;
-      if (!this.walls.some(w => w.x === wx && w.y === wy)) {
-        this.walls.push({ x: wx, y: wy });
-      }
+      if (!this.walls.some(w => w.x === wx && w.y === wy)) this.walls.push({ x: wx, y: wy });
     }
 
-    // 生成药水
-    this.potions = [];
-    let px = Math.floor(Math.random() * this.size);
-    let py = Math.floor(Math.random() * this.size);
-    if (!this.isBlocked(px, py) && !(px === 0 && py === 0)) {
-      this.potions.push({ x: px, y: py });
-    }
+    // 随机 1 个补给便当
+    let fx = Math.floor(Math.random() * this.size);
+    let fy = Math.floor(Math.random() * this.size);
+    if (!this.isBlocked(fx, fy) && (fx !== 0 || fy !== 0)) this.food.push({ x: fx, y: fy });
 
-    // 生成敌人 (随楼层增加)
+    // 随机生成敌人
     this.enemies = [];
-    const enemyCount = 2 + Math.floor(this.floor * 0.8);
-    for (let i = 0; i < enemyCount; i++) {
+    const count = 2 + Math.floor(this.floor * 0.7);
+    for (let i = 0; i < count; i++) {
       let ex, ey;
       do {
         ex = Math.floor(Math.random() * this.size);
         ey = Math.floor(Math.random() * this.size);
-      } while (this.isBlocked(ex, ey) || (Math.abs(ex - 0) + Math.abs(ey - 0) < 2));
-      
-      const type = ENEMY_TYPES[Math.floor(Math.random() * ENEMY_TYPES.length)];
+      } while (this.isBlocked(ex, ey) || (ex + ey < 2));
+
+      const meta = MONSTERS_META[i % MONSTERS_META.length];
       this.enemies.push({
-        ...type,
-        hp: type.hp + Math.floor(this.floor * 1.5),
+        ...meta,
+        hp: meta.hp + (this.floor - 1) * 2,
         x: ex,
         y: ey
       });
     }
 
-    this.renderBoard();
+    this.log(`深入第 ${this.floor} 层，遭遇了异化面孔宿敌！`);
+    this.render();
   }
 
   isBlocked(x, y) {
     if (x < 0 || y < 0 || x >= this.size || y >= this.size) return true;
-    if (this.walls.some(w => w.x === x && w.y === y)) return true;
-    return false;
+    return this.walls.some(w => w.x === x && w.y === y);
   }
 
   handleKey(e) {
@@ -372,79 +436,74 @@ class Game {
   }
 
   move(dx, dy) {
-    const nx = this.playerPos.x + dx;
-    const ny = this.playerPos.y + dy;
-
+    const nx = this.pos.x + dx;
+    const ny = this.pos.y + dy;
     if (this.isBlocked(nx, ny)) return;
 
-    // 碰撞敌人 -> 普通攻击
-    const enemyIdx = this.enemies.findIndex(e => e.x === nx && e.y === ny);
-    if (enemyIdx >= 0) {
+    // 撞击攻击怪物
+    const targetIdx = this.enemies.findIndex(e => e.x === nx && e.y === ny);
+    if (targetIdx >= 0) {
       let dmg = 2;
-      if (this.critNext) {
-        dmg *= 3;
-        this.critNext = false;
-        this.log(`💥 暴击破译！造成了 ${dmg} 点巨大创伤！`);
+      if (this.crit) {
+        dmg = 6;
+        this.crit = false;
+        this.log(`💥 墨镜破译暴击！造成 ${dmg} 点巨大创伤！`);
       } else {
-        this.log(`⚔️ 先遣队撞击了 ${this.enemies[enemyIdx].name}，造成 ${dmg} 伤害。`);
+        this.log(`⚔️ 小队撞击 ${this.enemies[targetIdx].name} 造成 ${dmg} 伤害。`);
       }
-      this.enemies[enemyIdx].hp -= dmg;
-      if (this.enemies[enemyIdx].hp <= 0) {
-        this.log(`💀 击败了 ${this.enemies[enemyIdx].name}！`);
-        this.enemies.splice(enemyIdx, 1);
+      this.enemies[targetIdx].hp -= dmg;
+      if (this.enemies[targetIdx].hp <= 0) {
+        this.log(`💀 击破 ${this.enemies[targetIdx].name}！`);
+        this.enemies.splice(targetIdx, 1);
       }
-      this.endTurn();
+      this.nextTurn();
       return;
     }
 
-    // 移动
-    this.playerPos = { x: nx, y: ny };
+    this.pos = { x: nx, y: ny };
 
-    // 拾取药水
-    const pIdx = this.potions.findIndex(p => p.x === nx && p.y === ny);
-    if (pIdx >= 0) {
-      this.hp = Math.min(this.maxHp, this.hp + 5);
-      this.potions.splice(pIdx, 1);
-      this.log(`🧪 拾取营养便当，生命回复 5 点！`);
+    // 拾取补给
+    const fIdx = this.food.findIndex(f => f.x === nx && f.y === ny);
+    if (fIdx >= 0) {
+      this.hp = Math.min(this.maxHp, this.hp + 6);
+      this.food.splice(fIdx, 1);
+      this.log(`🍎 拾取应急能源，恢复 6 点 HP！`);
     }
 
-    // 抵达楼梯下一层
-    if (this.playerPos.x === this.exit.x && this.playerPos.y === this.exit.y) {
+    // 通关下潜
+    if (this.pos.x === this.exit.x && this.pos.y === this.exit.y) {
       if (this.floor >= 5) {
-        this.showEndModal('🏆 终极胜利！', '你带领表情先遣队成功突破了第 5 层深渊！');
+        this.finishModal('🏆 突破成功！', '你带领面孔战队成功击穿了深渊！');
         return;
       }
-      this.startFloor(this.floor + 1);
+      this.initFloor(this.floor + 1);
       return;
     }
 
-    this.endTurn();
+    this.nextTurn();
   }
 
-  endTurn() {
-    // 技能冷却计数减少
-    this.squad.forEach(hero => {
-      if (hero.currentCd > 0) hero.currentCd--;
-    });
+  nextTurn() {
+    // 冷却结算
+    this.squad.forEach(h => { if (h.currentCd > 0) h.currentCd--; });
 
     // 敌人行动
-    if (this.freezeTurns > 0) {
-      this.freezeTurns--;
-      this.log(`❄️ 敌人全员被冰冻中，无法行动！`);
+    if (this.freeze > 0) {
+      this.freeze--;
+      this.log(`❄️ 敌人处于冰冻状态，无法动弹！`);
     } else {
-      this.enemies.forEach(enemy => {
-        const dist = Math.abs(enemy.x - this.playerPos.x) + Math.abs(enemy.y - this.playerPos.y);
-        if (dist === 1) {
-          this.hp -= enemy.atk;
-          this.log(`🩸 ${enemy.name} 攻击了小队，受到 ${enemy.atk} 伤害！`);
-        } else if (dist > 1) {
-          // 简易追踪寻路
-          let mx = Math.sign(this.playerPos.x - enemy.x);
-          let my = Math.sign(this.playerPos.y - enemy.y);
-          if (mx !== 0 && !this.isBlocked(enemy.x + mx, enemy.y) && !this.enemies.some(e => e.x === enemy.x + mx && e.y === enemy.y)) {
-            enemy.x += mx;
-          } else if (my !== 0 && !this.isBlocked(enemy.x, enemy.y + my) && !this.enemies.some(e => e.x === enemy.x && e.y === enemy.y)) {
-            enemy.y += my;
+      this.enemies.forEach(e => {
+        const d = Math.abs(e.x - this.pos.x) + Math.abs(e.y - this.pos.y);
+        if (d === 1) {
+          this.hp -= e.atk;
+          this.log(`🩸 被 ${e.name} 攻击，承受 ${e.atk} 点伤害！`);
+        } else if (d > 1) {
+          let stepX = Math.sign(this.pos.x - e.x);
+          let stepY = Math.sign(this.pos.y - e.y);
+          if (stepX !== 0 && !this.isBlocked(e.x + stepX, e.y) && !this.enemies.some(m => m.x === e.x + stepX && m.y === e.y)) {
+            e.x += stepX;
+          } else if (stepY !== 0 && !this.isBlocked(e.x, e.y + stepY) && !this.enemies.some(m => m.x === e.x && m.y === e.y)) {
+            e.y += stepY;
           }
         }
       });
@@ -453,95 +512,97 @@ class Game {
     if (this.hp <= 0) {
       this.hp = 0;
       this.render();
-      this.showEndModal('💀 小队全灭', `你的探险在第 ${this.floor} 层终结。肉鸽法则：死亡即重生！`);
+      this.finishModal('💀 小队倒下', `止步于第 ${this.floor} 层。肉鸽的核心在于重整旗鼓！`);
       return;
     }
 
     this.render();
   }
 
-  useSkill(index) {
-    const hero = this.squad[index];
-    if (hero.currentCd > 0) return;
+  useSkill(idx) {
+    const h = this.squad[idx];
+    if (h.currentCd > 0) return;
 
-    if (hero.id === 'chef') {
-      this.hp = Math.min(this.maxHp, this.hp + 5);
-      this.log(`👨‍🍳 主厨拿出秘制火锅，全员恢复 5 点 HP！`);
-    } else if (hero.id === 'cowboy') {
+    if (h.id === 'chef') {
+      this.hp = Math.min(this.maxHp, this.hp + 6);
+      this.log(`👨‍🍳 主厨开启盛宴，恢复 6 HP！`);
+    } else if (h.id === 'cowboy') {
       if (this.enemies.length === 0) return;
-      // 索敌最近敌人
-      let target = this.enemies.reduce((prev, curr) => {
-        let dPrev = Math.abs(prev.x - this.playerPos.x) + Math.abs(prev.y - this.playerPos.y);
-        let dCurr = Math.abs(curr.x - this.playerPos.x) + Math.abs(curr.y - this.playerPos.y);
-        return dCurr < dPrev ? curr : prev;
-      });
+      let target = this.enemies[0];
       target.hp -= 4;
-      this.log(`🤠 牛仔套索射击！命中 ${target.name} 造成 4 伤害！`);
-      if (target.hp <= 0) {
-        this.enemies = this.enemies.filter(e => e !== target);
-        this.log(`💀 ${target.name} 被狙杀！`);
-      }
-    } else if (hero.id === 'helmet') {
+      this.log(`🤠 牛仔点杀！对 ${target.name} 造成 4 伤害！`);
+      if (target.hp <= 0) this.enemies.splice(0, 1);
+    } else if (h.id === 'helmet') {
       this.enemies.forEach(e => {
-        let d = Math.abs(e.x - this.playerPos.x) + Math.abs(e.y - this.playerPos.y);
-        if (d <= 2) {
+        if (Math.abs(e.x - this.pos.x) + Math.abs(e.y - this.pos.y) <= 2) {
           e.hp -= 2;
-          this.log(`⛑️ 野蛮冲撞波及 ${e.name}，造成 2 伤！`);
+          this.log(`⛑️ 冲撞波及 ${e.name} (-2 HP)！`);
         }
       });
       this.enemies = this.enemies.filter(e => e.hp > 0);
-    } else if (hero.id === 'hacker') {
-      this.critNext = true;
-      this.log(`🕶️ 墨镜客完成弱点破译，下次攻击暴击 300%！`);
-    } else if (hero.id === 'beanie') {
-      this.freezeTurns = 2;
-      this.log(`🥶 毛线帽释放寒潮，冰冻敌人 2 回合！`);
-    } else if (hero.id === 'glasses') {
-      this.squad.forEach(h => h.currentCd = Math.max(0, h.currentCd - 2));
-      this.log(`🤓 极客战术超频，全队冷却加速 2 回合！`);
+    } else if (h.id === 'agent') {
+      this.crit = true;
+      this.log(`🕶️ 特工洞察破绽，下次平砍 300% 伤害！`);
+    } else if (h.id === 'headphone') {
+      this.squad.forEach((s, sidx) => { if (sidx !== idx) s.currentCd = 0; });
+      this.log(`🎧 节奏超频，队友技能全部即刻重置！`);
+    } else if (h.id === 'beanie') {
+      this.freeze = 2;
+      this.log(`🥶 冰霜冻结全场敌军 2 回合！`);
     }
 
-    hero.currentCd = hero.cd;
-    this.endTurn();
+    h.currentCd = h.cd;
+    this.nextTurn();
   }
 
   log(msg) {
-    const logEl = document.getElementById('log');
-    const line = document.createElement('div');
-    line.innerText = msg;
-    logEl.prepend(line);
+    const l = document.getElementById('log');
+    const d = document.createElement('div');
+    d.innerText = msg;
+    l.prepend(d);
   }
 
-  showEndModal(title, sub) {
-    const overlay = document.getElementById('overlay');
+  finishModal(title, sub) {
+    const o = document.getElementById('overlay');
     document.getElementById('modal-title').innerText = title;
-    document.getElementById('modal-sub').innerText = sub;
-    document.getElementById('roster').innerHTML = '';
-    const btn = document.getElementById('modal-action-btn');
-    btn.innerText = '重新开始';
-    btn.disabled = false;
-    btn.onclick = () => location.reload();
-    overlay.classList.remove('hidden');
+    document.getElementById('modal-btn').innerText = '重开一局';
+    document.getElementById('modal-btn').disabled = false;
+    document.getElementById('modal-btn').onclick = () => location.reload();
+    o.classList.remove('hidden');
   }
 
   renderSquadBar() {
     const bar = document.getElementById('squad-bar');
     bar.innerHTML = '';
-    this.squad.forEach((h, idx) => {
-      const card = document.createElement('div');
-      card.className = 'hero-card';
-      card.innerHTML = `
-        <div class="avatar">${h.avatar}</div>
+    this.squad.forEach((h, i) => {
+      const slot = document.createElement('div');
+      slot.className = 'hero-slot';
+      
+      const img = document.createElement('div');
+      img.className = 'face-sprite';
+      applySprite(img, h.col, h.row);
+
+      slot.appendChild(img);
+      slot.innerHTML += `
         <div class="name">${h.name}</div>
-        <button class="skill-btn" id="sbtn-${idx}" onclick="game.useSkill(${idx})">
-          ${h.currentCd > 0 ? `CD: ${h.currentCd}` : '技能释放'}
+        <button class="skill-btn" id="sbtn-${i}" onclick="game.useSkill(${i})">
+          ${h.currentCd > 0 ? `CD: ${h.currentCd}` : h.skill}
         </button>
       `;
-      bar.appendChild(card);
+      bar.appendChild(slot);
     });
   }
 
-  renderBoard() {
+  render() {
+    document.getElementById('ui-hp').innerText = `${this.hp}/${this.maxHp}`;
+    this.squad.forEach((h, i) => {
+      const btn = document.getElementById(`sbtn-${i}`);
+      if (btn) {
+        btn.innerText = h.currentCd > 0 ? `CD: ${h.currentCd}` : h.skill;
+        btn.disabled = h.currentCd > 0;
+      }
+    });
+
     const board = document.getElementById('board');
     board.innerHTML = '';
 
@@ -549,10 +610,14 @@ class Game {
       for (let x = 0; x < this.size; x++) {
         const tile = document.createElement('div');
         tile.className = 'tile';
-        
-        if (x === this.playerPos.x && y === this.playerPos.y) {
-          tile.classList.add('player');
-          tile.innerText = this.squad[0].avatar; // 领队作为代表
+
+        if (x === this.pos.x && y === this.pos.y) {
+          tile.classList.add('player-box');
+          const face = document.createElement('div');
+          face.className = 'face-sprite';
+          // 棋盘上显示当前领队角色的 3D 脸庞
+          applySprite(face, this.squad[0].col, this.squad[0].row);
+          tile.appendChild(face);
         } else if (x === this.exit.x && y === this.exit.y) {
           tile.classList.add('exit');
           tile.innerText = '🚪';
@@ -561,46 +626,37 @@ class Game {
           tile.innerText = '🧱';
         } else {
           const enemy = this.enemies.find(e => e.x === x && e.y === y);
-          const potion = this.potions.find(p => p.x === x && p.y === y);
+          const food = this.food.find(f => f.x === x && f.y === y);
+
           if (enemy) {
-            tile.innerText = enemy.avatar;
-            const hpBadge = document.createElement('div');
-            hpBadge.className = 'tile-hp';
-            hpBadge.innerText = enemy.hp;
-            tile.appendChild(hpBadge);
-          } else if (potion) {
-            tile.innerText = '🍱';
+            const eface = document.createElement('div');
+            eface.className = 'face-sprite';
+            applySprite(eface, enemy.col, enemy.row);
+            tile.appendChild(eface);
+
+            const badge = document.createElement('div');
+            badge.className = 'tile-badge';
+            badge.innerText = enemy.hp;
+            tile.appendChild(badge);
+          } else if (food) {
+            tile.innerText = '🍎';
           }
         }
 
-        // 点击相邻格子移动/攻击
+        // 点击相邻格子移动
         tile.onclick = () => {
-          let dx = x - this.playerPos.x;
-          let dy = y - this.playerPos.y;
-          if (Math.abs(dx) + Math.abs(dy) === 1) {
-            this.move(dx, dy);
-          }
+          let dx = x - this.pos.x;
+          let dy = y - this.pos.y;
+          if (Math.abs(dx) + Math.abs(dy) === 1) this.move(dx, dy);
         };
 
         board.appendChild(tile);
       }
     }
   }
-
-  render() {
-    document.getElementById('ui-hp').innerText = `${this.hp}/${this.maxHp}`;
-    this.squad.forEach((h, idx) => {
-      const btn = document.getElementById(`sbtn-${idx}`);
-      if (btn) {
-        btn.innerText = h.currentCd > 0 ? `CD: ${h.currentCd}` : '技能释放';
-        btn.disabled = h.currentCd > 0;
-      }
-    });
-    this.renderBoard();
-  }
 }
 
-const game = new Game();
+const game = new MicroRogue();
 </script>
 </body>
 </html>
